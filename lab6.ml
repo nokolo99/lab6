@@ -65,23 +65,26 @@ succeeding exercises, you shouldn't feel beholden to how the
 definition is introduced in the skeleton code below. (We'll stop
 mentioning this now, and forevermore.) *)
 
-let twos = fun () -> failwith "twos not implemented" ;;
+let rec twos : int stream = 
+  fun () -> Cons(2, twos) ;;
 
 (* An infinite stream of threes, built from the ones and twos. *)
 
-let threes = fun () -> failwith "threes not implemented" ;;
+let rec threes : int stream = 
+  smap2 (+) ones twos  ;;
   
 (* An infinite stream of natural numbers (0, 1, 2, 3, ...). *)
 
-let nats = fun () -> failwith "nats not implemented" ;;
+let rec nats : int stream = 
+  fun () -> Cons(0, smap((+) 1) nats) ;;
 
 (* Now some new examples. For these, don't build them directly, but
 make use of the stream mapping functions. *)
 
 (* Infinite streams of even and odd numbers. *)
 
-let evens () = failwith "evens not implemented" ;;
-let odds () = failwith "odds not implemented" ;;
+let evens () : int stream = smap (fun n -> 2 * n) nats ;;
+let odds () : int stream = smap (fun n -> 2 * n + 1) nats ;;
 
 (* In addition to mapping over streams, we should be able to use all
 the other higher-order list functions you've grown to know and love,
@@ -98,12 +101,14 @@ predicate.  Example:
    - : int list = [0; 2; 4; 6; 8; 10; 12; 14; 16; 18]
  *)
 
-let sfilter _ = failwith "sfilter not implemented" ;;
+let rec sfilter (f : 'a -> bool) (s : 'a stream) = 
+  if f (head s) then fun () -> Cons (head s, sfilter f (tail s))
+  else sfilter f (tail s) ;;
   
 (* Now redefine evens and odds using sfilter *)
 
-let evens2 _ = failwith "evens with sfilter not implemented" ;;
-let odds2 _ = failwith "odds with sfilter not implemented" ;;
+let evens2 = sfilter (fun x -> x mod 2 = 0) ;;
+let odds2 = sfilter (fun x -> x mod 2 = 1) ;;
 
 (*====================================================================
 Part 2: Eratosthenes Sieve
@@ -162,7 +167,8 @@ In defining the sieve function, the following functon may be useful.
 let not_div_by (n : int) (m : int) : bool = 
     not (m mod n = 0) ;;
 
-let rec sieve s = failwith "sieve not implemented" ;;
+let rec sieve (s : int stream) = 
+  fun () -> Cons(head s, sieve (sfilter (fun x -> not_div_by (head s) x) (tail s))) ;;
 
 (*====================================================================
 Part 3: Using OCaml's Lazy module
@@ -221,7 +227,7 @@ module NativeLazyStreams =
       else head s :: first (n - 1) (tail s) ;;
 
     let rec smap (f : 'a -> 'b) (s : 'a stream) : 'b stream =
-      failwith "smap native not implemented" ;;
+      lazy (Cons(f (head s)), (smap f (tail s))) ;; 
 
     let rec smap2 (f : 'a -> 'b -> 'c)
                   (s1 : 'a stream)
