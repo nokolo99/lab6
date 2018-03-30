@@ -271,11 +271,11 @@ time (msecs): 0.006914
 (* Redo the Eratosthenes sieve using the NativeLazyStreams by
    completing the functions below. *)
 
-let rec nats2 = lazy (failwith "nats native not implemented") ;;
+let rec nats2 = lazy (Cons(0, smap((+) 1) nats2)) ;;
  
-let rec sieve2 s = failwith "sieve native not implemented" ;;
+let rec sieve2 s = lazy(Cons(head s, sieve2 (sfilter (fun x -> not_div_by (head s) x) (tail s)))) ;;
 
-let primes2 = lazy (failwith "primes2 native not implemented") ;;
+let primes2 = lazy (sieve2 (tail (tail nats2))) ;;
 
 (* How much further can you get computing primes now that the
    recomputation problem is solved?  Implement a function to find the
@@ -283,5 +283,7 @@ let primes2 = lazy (failwith "primes2 native not implemented") ;;
    prime. *)
 
 let rec nth (s : 'a stream) (n : int) : 'a =
-  failwith "nth native not implemented" ;;
+  match List.rev (first n (Lazy.force primes2)) with
+  | h::t -> h
+  | _ -> 0 ;;
 
